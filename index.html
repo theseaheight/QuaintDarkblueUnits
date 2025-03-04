@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+        }
+        .chrome-header {
+            background: #f1f3f4;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+        .tabs {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: #e0e0e0;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .tab.active {
+            background: #fff;
+            border-bottom: 1px solid #fff;
+        }
+        .close-tab {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .new-tab {
+            padding: 8px 16px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .url-bar {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+        #url-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #go-button {
+            padding: 8px 16px;
+            margin-left: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .browser-window {
+            width: 100%;
+            height: calc(100vh - 60px);
+        }
+        #browser-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chrome-header">
+        <div class="tabs">
+            <div class="tab active" data-url="https://www.example.com">
+                <span>Example Tab</span>
+                <span class="close-tab">×</span>
+            </div>
+            <div class="new-tab">+</div>
+        </div>
+        <div class="url-bar">
+            <input type="text" id="url-input" placeholder="Enter URL...">
+            <button id="go-button">Go</button>
+        </div>
+    </div>
+    <div class="browser-window">
+        <iframe id="browser-iframe" src="https://www.example.com"></iframe>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabsContainer = document.querySelector('.tabs');
+            const iframe = document.getElementById('browser-iframe');
+            const urlInput = document.getElementById('url-input');
+            const goButton = document.getElementById('go-button');
+
+            // Switch tabs
+            function switchTab(tab) {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                iframe.src = `/proxy?url=${encodeURIComponent(tab.getAttribute('data-url'))}`;
+            }
+
+            // Add new tab
+            function addTab(url = 'https://www.example.com') {
+                const newTab = document.createElement('div');
+                newTab.classList.add('tab');
+                newTab.setAttribute('data-url', url);
+                newTab.innerHTML = `<span>New Tab</span><span class="close-tab">×</span>`;
+                tabsContainer.insertBefore(newTab, document.querySelector('.new-tab'));
+                switchTab(newTab);
+            }
+
+            // Event listeners
+            tabsContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('tab')) {
+                    switchTab(e.target);
+                } else if (e.target.classList.contains('close-tab')) {
+                    const tabToClose = e.target.parentElement;
+                    if (tabToClose.classList.contains('active')) {
+                        const nextTab = tabToClose.previousElementSibling || document.querySelector('.new-tab');
+                        if (nextTab) switchTab(nextTab);
+                    }
+                    tabToClose.remove();
+                } else if (e.target.classList.contains('new-tab')) {
+                    addTab();
+                }
+            });
+
+            goButton.addEventListener('click', function() {
+                const url = urlInput.value;
+                if (url) {
+                    const activeTab = document.querySelector('.tab.active');
+                    activeTab.setAttribute('data-url', url);
+                    iframe.src = `/proxy?url=${encodeURIComponent(url)}`;
+                }
+            });
+
+            // Initialize with a default tab
+            addTab();
+        });
+    </script>
+</body>
+</html>
